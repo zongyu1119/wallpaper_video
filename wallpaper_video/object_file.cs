@@ -12,7 +12,10 @@ namespace wallpaper_video
         public string file { get; set; }
         public string preview { get; set; }
         public string title { get; set; }
-        public string type { get; set; }
+        public string type { get { return _type ?? "Undefined"; }
+                set{ _type = value; } }
+        private string _type;
+        public string filePath { get; set; }
         public List<string> tags { get; set; }
     }
 }
