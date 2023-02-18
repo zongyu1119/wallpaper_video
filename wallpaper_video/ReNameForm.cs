@@ -92,8 +92,8 @@ namespace wallpaper_video
                 for (int i=0;i< typeCheckedListBox.CheckedItems.Count; i++)
                 {
                     typesChecked.Add(typeCheckedListBox.CheckedItems[i].ToString());
-                }               
-                if (files.Contains(path + "\\project.json")&&Path.GetFileNameWithoutExtension(path).Length==10)
+                }
+                if (files.Contains(Path.Combine(path, "project.json")) &&long.TryParse(Path.GetFileNameWithoutExtension(path), out long oi))
                 {
                     var obj = getFileObj(path);
                     if (((!typesChecked.Any())||(obj.type!=null&&typesChecked.Contains(obj.type.ToUpper())))&&((!keyWords.Any())||keyWords.Any(x=>obj.title.Contains(x))))
@@ -124,22 +124,33 @@ namespace wallpaper_video
         {
             string newFilePath = Path.Combine(string.IsNullOrWhiteSpace(tbDestPath.Text)?Path.GetDirectoryName(objFile.filePath): tbDestPath.Text, objFile.type);
             string new_name = objFile.type + "-" + objFile.title;
-            new_name.Replace('\\', '-');
-            new_name.Replace('/', '-');
-            new_name.Replace('|', '-');
-            new_name.Replace('&', '-');
-            new_name.Replace('【', '[');
-            new_name.Replace('】', ']');
-            new_name.Replace(' ', '-');
-            if (Directory.Exists(Path.Combine(newFilePath, new_name)))
-            {               
-                showLog("文件夹已经存在  " + new_name);
-                new_name += Guid.NewGuid().ToString("N").ToUpper().Substring(20);
-            }
-            if (!Directory.Exists(newFilePath))
-                Directory.CreateDirectory(newFilePath);
+            new_name=new_name.Replace('\\', '-')
+                .Replace('/', '-')
+                .Replace('|', '-')
+                .Replace('&', '-')
+                .Replace('【', '[')
+                .Replace('】', ']')
+                .Replace(' ', '-')
+                .Replace('|', '-')
+                .Replace('（', '(')
+                .Replace('）', ')')
+                .Replace('*', 'x')
+                .Replace('，', ',')
+                .Replace('：', ':')
+                .Replace(':', 'x')
+                .Replace('>', ']')
+                .Replace('<', '[')
+                .Replace('\"', '-')
+                .Replace('\'', '-');
             try
             {
+                if (Directory.Exists(Path.Combine(newFilePath, new_name)))
+                {
+                    showLog("文件夹已经存在  " + new_name);
+                    new_name += Guid.NewGuid().ToString("N").ToUpper().Substring(20);
+                }
+                if (!Directory.Exists(newFilePath))
+                    Directory.CreateDirectory(newFilePath);
                 Directory.Move(objFile.filePath, Path.Combine(newFilePath, new_name));
                 showLog($"【{index+1}】重命名成功，标题：{objFile.title}");
             }

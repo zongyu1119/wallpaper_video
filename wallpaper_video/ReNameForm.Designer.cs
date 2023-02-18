@@ -80,6 +80,7 @@ namespace wallpaper_video
             this.tb_dir.Name = "tb_dir";
             this.tb_dir.Size = new System.Drawing.Size(421, 25);
             this.tb_dir.TabIndex = 3;
+            this.tb_dir.Text = "F:\\SteamLibrary\\steamapps\\workshop\\content\\431960";
             // 
             // lv_log
             // 
@@ -156,6 +157,7 @@ namespace wallpaper_video
             this.tbDestPath.Name = "tbDestPath";
             this.tbDestPath.Size = new System.Drawing.Size(306, 25);
             this.tbDestPath.TabIndex = 12;
+            this.tbDestPath.Text = "F:\\SteamLibrary\\steamapps\\workshop\\content";
             // 
             // label5
             // 
