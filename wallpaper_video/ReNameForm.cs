@@ -36,7 +36,9 @@ namespace wallpaper_video
                     MessageBox.Show("目标目录和读取目录不在同一个磁盘下，不允许移动！");
                 else
                 {
-                    var fileObjList = DirFind(path);
+                    var fileObjList = DirFind();
+                    if (fileObjList == null || !fileObjList.Any())
+                        MessageBox.Show("请选择文件夹后初始化！");
                     fileObjList.ForEach(x =>
                     {
                         DirRename(x,fileObjList.IndexOf(x));
@@ -81,90 +83,42 @@ namespace wallpaper_video
         /// 发现文件夹
         /// </summary>
         /// <param name="path"></param>
-        private List<object_file> DirFind(string path)
+        private List<ObjectFile> DirFind()
         {
             try
             {
-                var files = Directory.GetFiles(path);
-                var keyWords=tbPriKey.Text.Split(',').ToList();
+                if (!objectFiles.Any()) 
+                    return null;
+                var keyWords = tbPriKey.Text.Split(',').ToList();
                 var typesChecked = new List<string>();
-                var fileObjList=new List<object_file>();
-                for (int i=0;i< typeCheckedListBox.CheckedItems.Count; i++)
+                for (int i = 0; i < typeCheckedListBox.CheckedItems.Count; i++)
                 {
                     typesChecked.Add(typeCheckedListBox.CheckedItems[i].ToString());
                 }
-                if (files.Contains(Path.Combine(path, "project.json")) &&long.TryParse(Path.GetFileNameWithoutExtension(path), out long oi))
-                {
-                    var obj = getFileObj(path);
-                    if (((!typesChecked.Any())||(obj.type!=null&&typesChecked.Contains(obj.type.ToUpper())))&&((!keyWords.Any())||keyWords.Any(x=>obj.title.Contains(x))))
-                        fileObjList.Add(obj);
-                }
-                else if (Directory.GetDirectories(path).Length > 0)
-                {
-                    string[] dirs = Directory.GetDirectories(path);
-                    foreach (string d in dirs)
-                    {
-                        try
-                        {
-                           fileObjList.AddRange(DirFind(d));
-                        }
-                        catch { }
-                    }
-                }
-                return fileObjList;
+                var list=objectFiles
+                    .Where(x=> Path.GetFileNameWithoutExtension(x.dirPath)
+                    .All(char.IsDigit)&&((!typesChecked.Any()) || (x.type != null && typesChecked.Contains(x.type.ToUpper()))))
+                    .ToList();               
+                return list;
             }
-            catch (Exception ex) { showLog(path + "  " + ex.Message); return null; }
+            catch (Exception ex) { showLog(ex.Message); return null; }
         }
         /// <summary>
         /// 重命名
         /// </summary>
         /// <param name="old_name"></param>
         /// <param name="new_name"></param>
-        void DirRename(object_file objFile,int index)
+        private void DirRename(ObjectFile objFile,int index)
         {
-            string newFilePath = Path.Combine(string.IsNullOrWhiteSpace(tbDestPath.Text)?Path.GetDirectoryName(objFile.filePath): tbDestPath.Text, objFile.type);
-            string new_name = objFile.type + "-" + objFile.title;
-            new_name=new_name.Replace('\\', '-')
-                .Replace('/', '-')
-                .Replace('|', '-')
-                .Replace('&', '-')
-                .Replace('【', '[')
-                .Replace('】', ']')
-                .Replace(' ', '-')
-                .Replace('|', '-')
-                .Replace('（', '(')
-                .Replace('）', ')')
-                .Replace('*', 'x')
-                .Replace('，', ',')
-                .Replace('：', ':')
-                .Replace(':', 'x')
-                .Replace('>', ']')
-                .Replace('<', '[')
-                .Replace('\"', '-')
-                .Replace('\'', '-');
-            try
-            {
-                if (Directory.Exists(Path.Combine(newFilePath, new_name)))
-                {
-                    showLog("文件夹已经存在  " + new_name);
-                    new_name += Guid.NewGuid().ToString("N").ToUpper().Substring(20);
-                }
-                if (!Directory.Exists(newFilePath))
-                    Directory.CreateDirectory(newFilePath);
-                Directory.Move(objFile.filePath, Path.Combine(newFilePath, new_name));
-                showLog($"【{index+1}】重命名成功，标题：{objFile.title}");
-            }
-            catch(Exception ex)
-            {
-                showLog($"【{index + 1}】重命名失败，标题：{objFile.title},文件夹：{objFile.filePath},原因：{ex.Message}");
-            }
-           
+            Unit.ShowLogDelegate show = new Unit.ShowLogDelegate(showLog);
+            Unit.MoveFile(objFile, tbDestPath.Text,show);
         }
 
         private void btn_select_dir_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
             dialog.Description = "请选择wallpaper视频所在文件夹";
+            dialog.SelectedPath = tb_dir.Text;
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 if (string.IsNullOrEmpty(dialog.SelectedPath))
@@ -176,6 +130,10 @@ namespace wallpaper_video
             }
         }
         /// <summary>
+        /// 读取的Object文件
+        /// </summary>
+        private List<ObjectFile> objectFiles = new List<ObjectFile>();
+        /// <summary>
         /// 初始化类型
         /// </summary>
         /// <param name="sender"></param>
@@ -183,15 +141,16 @@ namespace wallpaper_video
         private void initBtn_Click(object sender, EventArgs e)
         {
             string path = tb_dir.Text;
+            objectFiles=new List<ObjectFile>();
             if ((!string.IsNullOrWhiteSpace(path)) && Directory.Exists(path))
             {
                 List<string> types = new List<string>();
-                typeGet(path, ref types);
+                objectFiles = getFileList(path, ref types);
                 typeCheckedListBox.Items.Clear();
                 types.ForEach(x =>
                 {
                     typeCheckedListBox.Items.Add(x);
-                });               
+                });
             }
         }
         /// <summary>
@@ -199,31 +158,35 @@ namespace wallpaper_video
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        private object_file getFileObj(string path)
+        private ObjectFile getFileObj(string path)
         {
             var fileStream = new FileStream(path + "\\project.json", FileMode.Open);
             var bytes = new byte[fileStream.Length];
             fileStream.Read(bytes, 0, bytes.Length);
-            var obj = JsonConvert.DeserializeObject<object_file>(Encoding.UTF8.GetString(bytes));
-            obj.filePath = path;
+            var obj = JsonConvert.DeserializeObject<ObjectFile>(Encoding.UTF8.GetString(bytes));
+            obj.dirPath = path;
+            obj.objKey=Guid.NewGuid().ToString("N");
+            var fileSizeBytes = new FileInfo(Path.Combine(obj.dirPath,obj.file)).Length;
+            obj.fileSizeMB = (double)fileSizeBytes / 1024 / 1024;
             fileStream.Close();
             fileStream.Dispose();
             return obj;
         }
         /// <summary>
-        /// 获得类型
+        /// 获得文件对象列表
         /// </summary>
         /// <param name="path"></param>
         /// <param name="types"></param>
-        private void typeGet(string path,ref List<string> types)
+        private List<ObjectFile> getFileList(string path,ref List<string> types)
         {
             if ((!string.IsNullOrWhiteSpace(path)) && Directory.Exists(path))
             {
                 string[] files = Directory.GetFiles(path);
-
+                var fileList =new  List<ObjectFile>();
                 if (files.Contains(path + "\\project.json"))
                 {
                    var obj=getFileObj(path);
+                    fileList.Add(obj);
                     if (obj.type!=null&&!types.Contains(obj.type.ToUpper()))
                         types.Add(obj.type.ToUpper());
                 }
@@ -234,12 +197,30 @@ namespace wallpaper_video
                     {
                         try
                         {
-                            typeGet(d,ref types);
+                            fileList.AddRange(getFileList(d,ref types));
                         }
                         catch { }
                     }
                 }
+                return fileList;
             }
+            return new List<ObjectFile>();
+        }
+        /// <summary>
+        /// 视频筛选按钮点击
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void videoFilterBtn_Click(object sender, EventArgs e)
+        {
+            var fileObjList = objectFiles.Where(x=>x.type.ToLower()=="video").ToList();
+            if (fileObjList == null || !fileObjList.Any())
+            {
+                MessageBox.Show("没有找到视频文件，请选择文件夹后初始化！");
+                return;
+            }
+            var videosForm = new Videos(fileObjList, tbDestPath.Text,new Unit.ShowLogDelegate(showLog));
+            videosForm.Show();
         }
     }
 }

@@ -43,6 +43,7 @@ namespace wallpaper_video
             this.tbPriKey = new System.Windows.Forms.TextBox();
             this.tbDestPath = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.videoFilterBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btn_select_dir
@@ -131,7 +132,7 @@ namespace wallpaper_video
             this.initBtn.Name = "initBtn";
             this.initBtn.Size = new System.Drawing.Size(99, 27);
             this.initBtn.TabIndex = 8;
-            this.initBtn.Text = "初始化类型";
+            this.initBtn.Text = "初始化文件";
             this.initBtn.UseVisualStyleBackColor = true;
             this.initBtn.Click += new System.EventHandler(this.initBtn_Click);
             // 
@@ -157,7 +158,7 @@ namespace wallpaper_video
             this.tbDestPath.Name = "tbDestPath";
             this.tbDestPath.Size = new System.Drawing.Size(306, 25);
             this.tbDestPath.TabIndex = 12;
-            this.tbDestPath.Text = "F:\\SteamLibrary\\steamapps\\workshop\\content";
+            this.tbDestPath.Text = "F:\\SteamLibrary\\steamapps\\workshop\\content\\view";
             // 
             // label5
             // 
@@ -168,11 +169,22 @@ namespace wallpaper_video
             this.label5.TabIndex = 11;
             this.label5.Text = "目标";
             // 
+            // videoFilterBtn
+            // 
+            this.videoFilterBtn.Location = new System.Drawing.Point(774, 39);
+            this.videoFilterBtn.Name = "videoFilterBtn";
+            this.videoFilterBtn.Size = new System.Drawing.Size(99, 27);
+            this.videoFilterBtn.TabIndex = 13;
+            this.videoFilterBtn.Text = "视频筛选";
+            this.videoFilterBtn.UseVisualStyleBackColor = true;
+            this.videoFilterBtn.Click += new System.EventHandler(this.videoFilterBtn_Click);
+            // 
             // ReNameForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1007, 480);
+            this.Controls.Add(this.videoFilterBtn);
             this.Controls.Add(this.tbDestPath);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.tbPriKey);
@@ -210,5 +222,6 @@ namespace wallpaper_video
         private System.Windows.Forms.TextBox tbPriKey;
         private System.Windows.Forms.TextBox tbDestPath;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button videoFilterBtn;
     }
 }
