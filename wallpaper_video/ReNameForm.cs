@@ -152,6 +152,7 @@ namespace wallpaper_video
                     typeCheckedListBox.Items.Add(x);
                 });
             }
+            showLog($"文件夹初始化成功，文件个数：{objectFiles.Count}");
         }
         /// <summary>
         /// 读取文件对象
@@ -166,8 +167,11 @@ namespace wallpaper_video
             var obj = JsonConvert.DeserializeObject<ObjectFile>(Encoding.UTF8.GetString(bytes));
             obj.dirPath = path;
             obj.objKey=Guid.NewGuid().ToString("N");
-            var fileSizeBytes = new FileInfo(Path.Combine(obj.dirPath,obj.file)).Length;
-            obj.fileSizeMB = (double)fileSizeBytes / 1024 / 1024;
+            if (File.Exists(Path.Combine(obj.dirPath, obj.file)))
+            {
+                var fileSizeBytes = new FileInfo(Path.Combine(obj.dirPath, obj.file)).Length;
+                obj.fileSizeMB = (double)fileSizeBytes / 1024 / 1024;
+            }
             fileStream.Close();
             fileStream.Dispose();
             return obj;
@@ -219,6 +223,8 @@ namespace wallpaper_video
                 MessageBox.Show("没有找到视频文件，请选择文件夹后初始化！");
                 return;
             }
+            showLog($"筛选视频，视频文件个数：{fileObjList.Count}");
+            showLog($"筛选视频，目标文件地址：{tbDestPath.Text}");
             var videosForm = new Videos(fileObjList, tbDestPath.Text,new Unit.ShowLogDelegate(showLog));
             videosForm.Show();
         }

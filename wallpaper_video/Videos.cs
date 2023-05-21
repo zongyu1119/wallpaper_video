@@ -75,10 +75,14 @@ namespace wallpaper_video
             {
                 var imagePath = Path.Combine(file.dirPath, file.preview);
                 if (File.Exists(imagePath))
-                    using (var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.Delete))
+                    try
                     {
-                        imageList1.Images.Add(file.objKey, Image.FromStream(stream));
+                        using (var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.Delete))
+                        {
+                            imageList1.Images.Add(file.objKey, Image.FromStream(stream));
+                        }
                     }
+                    catch (IOException ex) { }
                 videoList.Items.Add(file.objKey,$"[{Math.Round(file.fileSizeMB,0)}MB]{file.title}", file.objKey);
             });
         }
@@ -87,6 +91,8 @@ namespace wallpaper_video
         }
         private void moveFile(string moveTo = null)
         {
+            if (videoList.SelectedItems.Count < 0)
+                return;
             var selectItemFirst = videoList.SelectedItems[0];
             var selectedObj = objectFiles.FirstOrDefault(x => x.objKey == selectItemFirst.ImageKey);
             if (deleteCheckBox.Checked)
@@ -124,6 +130,8 @@ namespace wallpaper_video
         /// <param name="e"></param>
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (videoList.SelectedItems.Count < 0)
+                return;
             var selectItemFirst = videoList.SelectedItems[0];
             var selectedObj = objectFiles.FirstOrDefault(x => x.objKey == selectItemFirst.ImageKey);
             if (deleteCheckBox.Checked)
@@ -180,6 +188,8 @@ namespace wallpaper_video
         /// <param name="e"></param>
         private void exporerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (videoList.SelectedItems.Count < 0)
+                return;
             var selectItemFirst = videoList.SelectedItems[0];
             var selectedObj = objectFiles[selectItemFirst.Index];
             try
